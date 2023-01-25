@@ -1,0 +1,78 @@
+﻿@page "/admin/haberler"
+@page "/admin"
+@inherits OwningComponentBase<INewsRepository>
+
+<table class="table table-sm table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Baslık</th>
+            <th>İçerik</th>
+            <th>Haber Kategori</th>
+            <th>Ozet</th>
+            <th>Resim Yol</th>
+            <td />
+        </tr>
+    </thead>
+        <tbody>
+            @if (Newsdata?.Count() > 0)
+            {
+                @foreach (HaberleriEkleModelClass p in Newsdata)
+                {
+                    <tr>
+                        <td>@p.NewsID</td>
+                        <td>@p.Baslik</td>
+                        <td>@p.Icerik</td>
+                        <td>@p.HaberlerinKategorisi</td>
+                        <td>@p.Ozet</td>
+                        <td>@p.ResimYol</td>
+                        <td>
+                            <NavLink class="btn btn-info btn-sm"
+                                     href="@GetDetailsUrl(p.NewsID)">
+                                Detaylar
+                            </NavLink>
+                            <NavLink class="btn btn-warning btn-sm"
+                                     href="@GetEditUrl(p.NewsID)">
+                                Düzenle
+                            </NavLink>
+                            <button class="btn btn-danger btn-sm"
+                                    @onclick="@(e => DeleteNews(p))">
+                                Sil
+                            </button>
+                        </td>
+                    </tr>
+                 } 
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center">Haber Yok</td>
+                </tr>
+            }
+        </tbody>
+</table>
+
+<NavLink class="btn btn-primary" href="/admin/haberler/create">Haber Ekle</NavLink>
+
+@code { public INewsRepository Repository => Service;
+
+    public IEnumerable<HaberleriEkleModelClass> Newsdata { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await UpdateData();
+    }
+
+    public async Task UpdateData()
+    {
+        Newsdata = await Repository.Haberler.ToListAsync();
+    }
+
+    public async Task DeleteNews(HaberleriEkleModelClass p)
+    {
+        Repository.DeleteNews(p);
+        await UpdateData();
+    }
+
+    public string GetDetailsUrl(int id) => $"/admin/haberler/details/{id}";
+    public string GetEditUrl(int id) => $"/admin/haberler/edit/{id}"; }

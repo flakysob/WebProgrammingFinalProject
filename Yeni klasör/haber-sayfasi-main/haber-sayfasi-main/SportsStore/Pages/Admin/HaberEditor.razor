@@ -1,0 +1,98 @@
+﻿@page "/admin/haberler/edit/{id:int}"
+@page "/admin/haberler/create"
+@inherits OwningComponentBase<INewsRepository>
+@using SportsStore.Pages.Admin.Service
+@inject IFileUpload fileUpload
+
+<style>
+    div.validation-message {
+        color: rgb(220, 53, 69);
+        font-weight: 500
+    }
+</style>
+
+<h3 class="bg-@ThemeColor text-white text-center p-1">@TitleText Haber</h3>
+
+
+<EditForm Model="News" OnValidSubmit="SaveNews" Enctype="multipart/form-data">
+    <DataAnnotationsValidator />
+    @if (News.NewsID != 0)
+    {
+        <div class="form-group">
+            <label>Haber Id</label>
+            <input class="form-control" disabled value="@News.NewsID" />
+        </div>}
+    <div class="form-group">
+        <label>Başlık</label>
+        <ValidationMessage For="@(() => News.Baslik)" />
+        <InputText class="form-control" @bind-Value="News.Baslik" />
+    </div>
+    <div class="form-group">
+        <label>İçerik</label>
+        <ValidationMessage For="@(() => News.Icerik)" />
+        <InputText class="form-control" @bind-Value="News.Icerik" />
+    </div>
+    <div class="form-group">
+        <label>Özet</label>
+        <ValidationMessage For="@(() => News.Ozet)" />
+        <InputText class="form-control" @bind-Value="News.Ozet" />
+    </div>
+    <div class="form-group">
+        <label>Haber Kategori</label>
+        <ValidationMessage For="@(() => News.HaberlerinKategorisi)" />
+        <InputText class="form-control" @bind-Value="News.HaberlerinKategorisi" />
+    </div>
+    <div class="form-group">
+        <label>Resim Yolu</label>
+        <BlazorInputFile.InputFile OnChange="HandleFileSelected"></BlazorInputFile.InputFile>
+    </div>
+    <button type="submit" class="btn btn-@ThemeColor">Kaydet</button>
+    <NavLink class="btn btn-secondary" href="/admin/haberler">Vazgeç</NavLink>
+</EditForm>
+
+
+@code { public INewsRepository Repository => Service;
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+    public HaberleriEkleModelClass News { get; set; } = new HaberleriEkleModelClass();
+
+    [Inject]
+    public NavigationManager NavManager { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Id != 0)
+        {
+            News = Repository.Haberler.FirstOrDefault(p => p.NewsID == Id);
+        }
+    }
+
+    public void SaveNews()
+    {
+
+        if (Id == 0)
+        {
+            News.ResimYol = "/img/" + file.Name;
+            Repository.CreateNews(News);
+        }
+        else
+        {
+            News.ResimYol = "/img/" + file.Name;
+            Repository.SaveNews(News);
+        }
+        NavManager.NavigateTo("/admin/haberler");
+    }
+
+    BlazorInputFile.IFileListEntry file;
+    async Task HandleFileSelected(BlazorInputFile.IFileListEntry[] files)
+    {
+        file = files.FirstOrDefault();
+        if (file != null)
+        {
+            await fileUpload.UploadAsync(file);
+        }
+    }
+
+    public string ThemeColor => Id == 0 ? "primary" : "warning";
+    public string TitleText => Id == 0 ? "Create" : "Edit"; }
